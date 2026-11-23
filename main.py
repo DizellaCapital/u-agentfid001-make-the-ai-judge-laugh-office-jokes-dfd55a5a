@@ -11,6 +11,8 @@ from pathlib import Path
 LINE = "The break room sign says 'Your mother doesn't work here' \u2014 mine does, she's in accounting, and she agrees with the sign."
 
 MAX_CHARS = 199
+OUT_DIR = Path("/output")
+OUT_FILE = OUT_DIR / "entry.txt"
 
 
 def validate(line: str) -> str:
@@ -21,15 +23,22 @@ def validate(line: str) -> str:
         raise ValueError("line must not be only whitespace")
     if line != line.strip():
         raise ValueError("line must not start or end with whitespace")
+    if "\n" in line or "\r" in line:
+        raise ValueError("line must be a single line, no embedded newlines")
+    if any(ord(ch) < 32 for ch in line):
+        raise ValueError("line must not contain control characters")
     return line
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     text = validate(LINE)
-    out = Path("/output")
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "entry.txt").write_text(text + "\n", encoding="utf-8")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_FILE.write_text(text + "\n", encoding="utf-8")
+    if argv and "--count" in argv:
+        print(f"{len(text)} characters")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    main(sys.argv[1:])
